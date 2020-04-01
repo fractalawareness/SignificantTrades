@@ -77,17 +77,17 @@ class InfluxStorage {
 
       into = getHms(timeframe)
 
-      const query = `SELECT min(low) AS low, 
-      max(high) AS high, 
-      first(open) AS open, 
-      last(close) AS close, 
-      sum(count) AS count, 
-      sum(count_buy) AS count_buy, 
-      sum(count_sell) AS count_sell, 
-      sum(liquidation_buy) AS liquidation_buy, 
-      sum(liquidation_sell) AS liquidation_sell, 
-      sum(vol) AS vol, 
-      sum(vol_buy) AS vol_buy, 
+      const query = `SELECT min(low) AS low,
+      max(high) AS high,
+      first(open) AS open,
+      last(close) AS close,
+      sum(count) AS count,
+      sum(count_buy) AS count_buy,
+      sum(count_sell) AS count_sell,
+      sum(liquidation_buy) AS liquidation_buy,
+      sum(liquidation_sell) AS liquidation_sell,
+      sum(vol) AS vol,
+      sum(vol_buy) AS vol_buy,
       sum(vol_sell) AS vol_sell`
 
       const query_from = `${this.options.influxDatabase}.autogen.${this.options.influxMeasurement}_${from}`
@@ -97,9 +97,9 @@ class InfluxStorage {
       const group = `GROUP BY time(${into}), exchange, pair fill(none)`
 
       const cq_query = `
-        CREATE CONTINUOUS QUERY cq_${into} ON ${this.options.influxDatabase} 
-        RESAMPLE FOR ${getHms(timeframe * 2)} 
-        BEGIN 
+        CREATE CONTINUOUS QUERY cq_${into} ON ${this.options.influxDatabase}
+        RESAMPLE FOR ${getHms(timeframe * 2)}
+        BEGIN
           ${query} INTO ${query_into} FROM ${query_from} ${group}
         END
       `
@@ -109,9 +109,6 @@ class InfluxStorage {
           .query(`${query} INTO ${query_into} FROM ${query_from} ${coverage} ${group}`)
           .then(res => {
             console.log(`[storage/influx] preheated ${into} data...`)
-          })
-          .catch(err => {
-            console.log(err)
           })
       )
 
@@ -130,13 +127,8 @@ class InfluxStorage {
             )
           }
         })
-        .catch(err => {
-          console.log(err)
-        })
 
-      await this.influx.query(cq_query).catch(err => {
-        // console.log(err)
-      })
+      await this.influx.query(cq_query)
     }
 
     cq_created = this.options.influxResampleTo
@@ -174,12 +166,12 @@ class InfluxStorage {
     return this.influx
       .query(
         `
-        SELECT * 
+        SELECT *
         FROM ${this.options.influxMeasurement}${
           this.options.influxTimeframe ? '_' + getHms(this.options.influxTimeframe) : ''
         }
         ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-        ORDER BY time DESC 
+        ORDER BY time DESC
         LIMIT 1
       `,
         {
@@ -338,9 +330,6 @@ class InfluxStorage {
           )} from ${beforeTs.getHours()}:${beforeTs.getMinutes()}:${beforeTs.getSeconds()}.${beforeTs.getMilliseconds()}`
         )
       })
-      .catch(err => {
-        console.log(err)
-      })
   }
 
   fetch(from, to, timeframe = 1000 * 60) {
@@ -356,8 +345,8 @@ class InfluxStorage {
 				sum(buy) * median(price) as buys,
 				sum(sell) * median(price) as sells,
 				count(side) as records
-			FROM trades 
-			WHERE pair='${this.options.pair}' AND time > ${from}ms and time < ${to}ms 
+			FROM trades
+			WHERE pair='${this.options.pair}' AND time > ${from}ms and time < ${to}ms
 			GROUP BY time(${timeframe}ms), exchange fill(none)
 		`
       )
@@ -377,6 +366,7 @@ class InfluxStorage {
           `[storage/influx] failed to retrieves trades between ${from} and ${to} with timeframe ${timeframe}\n\t`,
           err.message
         )
+				throw err;
       })
   }
 }
