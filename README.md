@@ -30,6 +30,7 @@ This will give you a running server on <http://127.0.0.1:3000> with mounted `./d
 See `./env` file for some basic configuration.
 Watch logs using `docker logs -f st-server`.
 Uncomment `influx` part in `docker-compose.yml` and set `STORAGE=influx` in `.env` to start using influxdb as a storage.
+Uncomment `chronograf` part in `docker-compose.yml` to get influxdb web interface at <http://127.0.0.1:8888>. Use `influx:8086` address for connection url field.
 
 5. Profit !
 
