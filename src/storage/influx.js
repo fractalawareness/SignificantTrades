@@ -282,43 +282,40 @@ class InfluxStorage {
       }
     }
 
+		const influxPreparedData = points.map((chunk, index) => {
+			const fields = {
+				count: chunk.count,
+				count_buy: chunk.count_buy,
+				count_sell: chunk.count_sell,
+				vol: chunk.vol,
+				vol_buy: chunk.vol_buy,
+				vol_sell: chunk.vol_sell,
+				liquidation_buy: chunk.liquidation_buy,
+				liquidation_sell: chunk.liquidation_sell
+			}
+
+			if (chunk.open !== null) {
+				;(fields.open = chunk.open),
+					(fields.high = chunk.high),
+					(fields.low = chunk.low),
+					(fields.close = chunk.close)
+			}
+
+			return {
+				measurement:
+					'trades' +
+					(this.options.influxTimeframe ? '_' + getHms(this.options.influxTimeframe) : ''),
+				tags: {
+					exchange: chunk.exchange,
+					pair: 'BTCUSD'
+				},
+				fields: fields,
+				timestamp: +chunk.time
+			}
+		});
+
     return this.influx
-      .writePoints(
-        points.map((chunk, index) => {
-          const fields = {
-            count: chunk.count,
-            count_buy: chunk.count_buy,
-            count_sell: chunk.count_sell,
-            vol: chunk.vol,
-            vol_buy: chunk.vol_buy,
-            vol_sell: chunk.vol_sell,
-            liquidation_buy: chunk.liquidation_buy,
-            liquidation_sell: chunk.liquidation_sell
-          }
-
-          if (chunk.open !== null) {
-            ;(fields.open = chunk.open),
-              (fields.high = chunk.high),
-              (fields.low = chunk.low),
-              (fields.close = chunk.close)
-          }
-
-          return {
-            measurement:
-              'trades' +
-              (this.options.influxTimeframe ? '_' + getHms(this.options.influxTimeframe) : ''),
-            tags: {
-              exchange: chunk.exchange,
-              pair: 'BTCUSD'
-            },
-            fields: fields,
-            timestamp: +chunk.time
-          }
-        }),
-        {
-          precision: 'ms'
-        }
-      )
+      .writePoints(influxPreparedData, {precision: 'ms'})
       .then(() => {
         const afterTs = +new Date()
 
@@ -329,6 +326,8 @@ class InfluxStorage {
             afterTs - beforeTs
           )} from ${beforeTs.getHours()}:${beforeTs.getMinutes()}:${beforeTs.getSeconds()}.${beforeTs.getMilliseconds()}`
         )
+
+				return influxPreparedData;
       })
   }
 
