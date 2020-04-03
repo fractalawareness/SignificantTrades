@@ -31,7 +31,7 @@ See `./env` file for some basic configuration.
 Watch logs using `docker logs -f st-server`.
 Uncomment `influxdb` part in `docker-compose.yml` and set `STORAGE=influx` in `.env` to start using influxdb as a storage.
 Uncomment `chronograf` part in `docker-compose.yml` to get influxdb web interface at <http://127.0.0.1:8888>. Use `influx:8086` address for connection url field.
-Uncomment `chronograf, telegraf, kapacitor` parts in `docker-compose.yml` to get running monitoring TICK stack ready for importing `InfluxDB` and `System` from pre-created dashboards.
+Uncomment `telegraf` and `kapacitor` parts in `docker-compose.yml` to get running monitoring TICK stack ready for importing `InfluxDB` and `System` from pre-created dashboards.
 
 5. Profit !
 
