@@ -13,7 +13,6 @@ class Server extends EventEmitter {
     this.timestamps = {}
     this.connected = false
     this.chunk = []
-		// TODO: save market depth at the same time? Maybe they send events on the same ws channel?
     this.lockFetch = true
 
     this.options = options
@@ -125,17 +124,9 @@ class Server extends EventEmitter {
 
     process.stdout.write(`[server/storage] backup ${this.chunk.length} trades\t\t\t\r`)
 
-		// TODO: or just use influxdb subscriptions?
-    return this.storage.save(this.chunk.splice(0, this.chunk.length))
-			.then((influxPreparedData) => {
-				if (influxPreparedData) {
-					this.broadcast({
-						type: 'influx_data_saved',
-						data: influxPreparedData
-					})
-				}
-	      this.scheduleNextBackup()
-	    });
+    return this.storage.save(this.chunk.splice(0, this.chunk.length)).then(() => {
+      this.scheduleNextBackup()
+    })
   }
 
   scheduleNextBackup() {
