@@ -218,11 +218,11 @@ class InfluxStorage {
 
       if (ts > pointTs) {
         for (let exchange in point) {
-          if (!point.close) {
-            point.low = null
-            point.high = null
-            point.open = null
-            point.close = null
+          if (!point[exchange].close) {
+            point[exchange].low = null
+            point[exchange].high = null
+            point[exchange].open = null
+            point[exchange].close = null
           }
 
           this.refPoint[exchange] = point[exchange]
@@ -256,8 +256,8 @@ class InfluxStorage {
             liquidation_sell: 0,
             open: null,
             high: 0,
-            low: Infinity,
             close: null
+            low: 0,
           }
 
           if (this.refPoint[trade[0]] && this.refPoint[trade[0]].close) {
