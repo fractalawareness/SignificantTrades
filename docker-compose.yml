@@ -1,6 +1,7 @@
 version: '3.7'
 
 services:
+
   server:
     container_name: st-server
     image: significant-trades-server
@@ -11,14 +12,16 @@ services:
         - WORKDIR=${WORKDIR}
         - FILES_LOCATION=${FILES_LOCATION}
         - PORT=${SERVER_PORT}
-        - INFLUX_URL=influx:${INFLUX_PORT}
+        - INFLUX_URL=influxdb:${INFLUX_PORT}
         - STORAGE=${STORAGE}
     volumes:
       - ./${FILES_LOCATION}:${WORKDIR}/${FILES_LOCATION}
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
+    depends_on:
+      - influxdb
 
-  influx:
+  influxdb:
     container_name: st-influxdb
     image: influxdb
     ports:
@@ -31,7 +34,36 @@ services:
     image: chronograf
     ports:
       - ${CHRONOGRAF_PORT}:${CHRONOGRAF_PORT}
+    environment:
+      INFLUXDB_URL: http://influxdb:${INFLUX_PORT}
+      KAPACITOR_URL: http://kapacitor:${KAPACITOR_PORT}
     volumes:
       - ./${FILES_LOCATION}/chronograf:/var/lib/chronograf
+    links:
+      - influxdb
+      - kapacitor
     depends_on:
-      - influx
+      - influxdb
+
+  telegraf:
+    image: telegraf
+    container_name: st-telegraf
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    links:
+      - influxdb
+    depends_on:
+      - influxdb
+
+  kapacitor:
+    image: kapacitor
+    container_name: st-kapacitor
+    environment:
+      KAPACITOR_HOSTNAME: kapacitor
+      KAPACITOR_INFLUXDB_0_URLS_0: http://influxdb:${INFLUX_PORT}
+    links:
+      - influxdb
+    ports:
+      - ${KAPACITOR_PORT}:${KAPACITOR_PORT}
+    depends_on:
+      - influxdb
