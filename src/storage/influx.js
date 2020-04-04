@@ -9,6 +9,7 @@ class InfluxStorage {
 
     this.refPoint = {}
     this.options = options
+    this.format = 'point'
   }
 
   connect() {
@@ -372,8 +373,8 @@ class InfluxStorage {
 				throw err;
       })
   }
-	fetchV2(fromMS, toMS, timeframe = '10s') {
-		const queryTimeframe = `${this.options.influxDatabase}.autogen.${this.options.influxMeasurement}_${timeframe}`;
+	fetchV2(fromMS, toMS, timeframe, groupBy = `time(${timeframe})`) {
+		const queryTimeframe = `"${this.options.influxDatabase}"."autogen"."${this.options.influxMeasurement}_${timeframe}"`;
 		const query = `
 			SELECT
 				first("open") AS "first_open",
@@ -401,25 +402,16 @@ class InfluxStorage {
 				mean("count") AS "mean_count",
 				spread("count") AS "spread_count",
 				sum("count") AS "sum_count"
-			FROM "${queryTimeframe}"
+			FROM ${queryTimeframe}
 			WHERE time > ${fromMS}ms AND time < ${toMS}ms
-			GROUP BY *
+			GROUP BY ${groupBy}
 			FILL(none)
 		`;
 		return this.influx
       .query(query)
-      .then(ticks =>
-        ticks
-          .map(tick => {
-            tick.timestamp = +new Date(tick.time)
-            delete tick.time
-            return tick
-          })
-          .sort((a, b) => a.timestamp - b.timestamp)
-      )
       .catch(err => {
         console.error(
-          `[storage/influx] failed to fetchV2 trades between ${from} and ${to} with timeframe ${timeframe}\n\t`,
+          `[storage/influx] failed to fetchV2 trades between ${fromMS} and ${toMS} with timeframe ${timeframe}\n\t`,
           err.message
         )
 				throw err;

@@ -452,6 +452,7 @@ class Server extends EventEmitter {
           match: /.*historicalV2\/(\d+)\/(\d+)(?:\/(\d+.))?\/?$/,
           response: (from, to, timeframe) => {
             response.setHeader('Content-Type', 'application/json')
+            showHelloWorld = false
 
 						if (!this.storage.fetchV2) {
 							response.writeHead(501)
@@ -506,16 +507,6 @@ class Server extends EventEmitter {
                       100
                     ).toFixed()}%)`
                   )
-                }
-
-                if (this.storage.format === 'trade') {
-                  for (let i = 0; i < this.chunk.length; i++) {
-                    if (this.chunk[i][1] <= from || this.chunk[i][1] >= to) {
-                      continue
-                    }
-
-                    output.push(this.chunk[i])
-                  }
                 }
 
                 this.logUsage(ip, to - from)
