@@ -372,6 +372,60 @@ class InfluxStorage {
 				throw err;
       })
   }
+	fetchV2(fromMS, toMS, timeframe = '10s') {
+		const queryTimeframe = `${this.options.influxDatabase}.autogen.${this.options.influxMeasurement}_${timeframe}`;
+		const query = `
+			SELECT
+				first("open") AS "first_open",
+				sum("vol_buy") AS "sum_vol_buy",
+				mean("vol_buy") AS "mean_vol_buy",
+				spread("vol_buy") AS "spread_vol_buy",
+				spread("vol_sell") AS "spread_vol_sell",
+				sum("vol_sell") AS "sum_vol_sell",
+				mean("vol_sell") AS "mean_vol_sell",
+				spread("low") AS "spread_low",
+				min("low") AS "min_low",
+				mean("low") AS "mean_low",
+				mean("high") AS "mean_high",
+				max("high") AS "max_high",
+				spread("high") AS "spread_high",
+				mean("liquidation_buy") AS "mean_liquidation_buy",
+				mean("liquidation_sell") AS "mean_liquidation_sell",
+				mean("count_buy") AS "mean_count_buy",
+				spread("count_buy") AS "spread_count_buy",
+				sum("count_buy") AS "sum_count_buy",
+				mean("count_sell") AS "mean_count_sell",
+				sum("count_sell") AS "sum_count_sell",
+				spread("count_sell") AS "spread_count_sell",
+				last("close") AS "last_close",
+				mean("count") AS "mean_count",
+				spread("count") AS "spread_count",
+				sum("count") AS "sum_count"
+			FROM "${queryTimeframe}"
+			WHERE time > ${fromMS}ms AND time < ${toMS}ms
+			GROUP BY *
+			FILL(none)
+		`;
+		return this.influx
+      .query(query)
+      .then(ticks =>
+        ticks
+          .map(tick => {
+            tick.timestamp = +new Date(tick.time)
+            delete tick.time
+            return tick
+          })
+          .sort((a, b) => a.timestamp - b.timestamp)
+      )
+      .catch(err => {
+        console.error(
+          `[storage/influx] failed to fetchV2 trades between ${from} and ${to} with timeframe ${timeframe}\n\t`,
+          err.message
+        )
+				throw err;
+      })
+	}
+
 }
 
 module.exports = InfluxStorage

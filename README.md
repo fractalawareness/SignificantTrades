@@ -93,5 +93,9 @@ All options can be set using CLI
 - Setting port & pair `node index port=3002 pair=ETHUSD`
 - Setting port & pair and restrict to some exchanges `node index port=3002 pair=ETHUSD bitmex bitfinex kraken`
 
+## API V2:
+
+**GET** `/historicalV2/1586017396761/1586018607072/10s` for fetching timeframe trades data (for now there are 10s, 30s, 1m, 3m, 5m, 15m)
+
 *Like whats been done here ?* Donate<br>
 [3NuLQsrphzgKxTBU3Vunj87XADPvZqZ7gc](bitcoin:3NuLQsrphzgKxTBU3Vunj87XADPvZqZ7gc)

@@ -447,6 +447,91 @@ class Server extends EventEmitter {
                 response.end(JSON.stringify({ error: error.message }))
               })
           }
+        },
+        {
+          match: /.*historicalV2\/(\d+)\/(\d+)(?:\/(\d+.))?\/?$/,
+          response: (from, to, timeframe) => {
+            response.setHeader('Content-Type', 'application/json')
+
+						if (!this.storage.fetchV2) {
+							response.writeHead(501)
+              response.end(JSON.stringify({ error: 'Storage doesnt support fetchV2' }))
+              return
+						}
+
+            if (this.lockFetch) {
+							response.writeHead(423)
+              response.end(JSON.stringify({ error: 'Fetch locked' }))
+              return
+            }
+
+            if (isNaN(from) || isNaN(to)) {
+              response.writeHead(400)
+              response.end(JSON.stringify({ error: 'Missing interval' }))
+              return
+            }
+
+            let maxFetchInterval = 1000 * 60 * 60 * 8
+
+            from = parseInt(from)
+            to = parseInt(to)
+
+            if (from > to) {
+              let _from = parseInt(from)
+              from = parseInt(to)
+              to = _from
+
+              console.log(`[${ip}] flip interval`)
+            }
+
+            if (to - from > maxFetchInterval) {
+              response.writeHead(400)
+              response.end(
+                JSON.stringify({ error: `Interval cannot exceed ${getHms(maxFetchInterval)}` })
+              )
+              return
+            }
+
+
+            const fetchStartAt = +new Date()
+
+            this.storage.fetchV2(from, to, timeframe)
+              .then(output => {
+                if (to - from > 1000 * 60) {
+                  console.log(
+                    `[${ip}] requesting ${getHms(to - from)} (${output.length} ${
+                      this.storage.format
+                    }s, took ${getHms(+new Date() - fetchStartAt)}, consumed ${(
+                      ((usage + to - from) / this.options.maxFetchUsage) *
+                      100
+                    ).toFixed()}%)`
+                  )
+                }
+
+                if (this.storage.format === 'trade') {
+                  for (let i = 0; i < this.chunk.length; i++) {
+                    if (this.chunk[i][1] <= from || this.chunk[i][1] >= to) {
+                      continue
+                    }
+
+                    output.push(this.chunk[i])
+                  }
+                }
+
+                this.logUsage(ip, to - from)
+
+                response.end(
+                  JSON.stringify({
+                    format: this.storage.format,
+                    results: output
+                  })
+                )
+              })
+              .catch(error => {
+                response.writeHead(500)
+                response.end(JSON.stringify({ error: error.message }))
+              })
+          }
         }
       ]
 
