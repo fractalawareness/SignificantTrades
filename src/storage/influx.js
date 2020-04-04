@@ -248,7 +248,7 @@ class InfluxStorage {
             liquidation_sell: 0,
             open: null,
             high: 0,
-            close: null
+            close: null,
             low: 0,
           }
 
