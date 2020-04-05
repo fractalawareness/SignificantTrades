@@ -249,8 +249,8 @@ class InfluxStorage {
             liquidation_sell: 0,
             open: null,
             high: 0,
-            low: null,
-            close: null
+            close: null,
+            low: 0,
           }
 
           if (this.refPoint[trade[0]] && this.refPoint[trade[0]].close) {
@@ -264,9 +264,6 @@ class InfluxStorage {
       } else {
         if (point[trade[0]].open === null) {
           point[trade[0]].open = +trade[2]
-        }
-        if (point[trade[0]].low === null) {
-          point[trade[0]].low = +trade[2]
         }
         point[trade[0]].count++
         point[trade[0]]['count_' + (trade[4] == 1 ? 'buy' : 'sell')]++
